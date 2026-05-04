@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEV.PERSONAL — Desarrollo Ágil & Consultoría</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Syne:wght@400..800&display=swap" rel="stylesheet">
+<style>
+  /* ─── RESET & VARIABLES ─── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #080b10;
+    --bg2:       #0d1117;
+    --surface:   #111822;
+    --border:    #1e2d40;
+    --accent:    #00e5ff;
+    --accent2:   #00ff94;
+    --accent3:   #ff3e6c;
+    --text:      #c9d8ea;
+    --text-dim:  #556680;
+    --text-head: #e8f4ff;
+    --mono:      'JetBrains Mono', monospace;
+    --sans:      'Syne', sans-serif;
+    --glow:      0 0 20px rgba(0,229,255,.25), 0 0 60px rgba(0,229,255,.08);
+    --glow2:     0 0 20px rgba(0,255,148,.2);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 15px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  ::selection { background: var(--accent); color: #000; }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 2px; }
+
+  /* ─── NOISE OVERLAY ─── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+    opacity: .025;
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ─── SCANLINES ─── */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,.08) 2px,
+      rgba(0,0,0,.08) 4px
+    );
+    pointer-events: none;
+    z-index: 9998;
+  }
+
+  /* ─── NAV ─── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.2rem 4rem;
+    background: rgba(8,11,16,.8);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    transition: padding .3s;
+  }
+  nav.scrolled { padding: .8rem 4rem; }
+
+  .nav-logo {
+    font-family: var(--mono);
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--accent);
+    text-decoration: none;
+    letter-spacing: -.02em;
+  }
+  .nav-logo span { color: var(--accent2); }
+
+  .nav-links {
+    display: flex;
+    gap: 2.5rem;
+    list-style: none;
+  }
+  .nav-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: .8rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    transition: color .2s;
+    position: relative;
+  }
+  .nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: -4px; left: 0;
+    width: 0; height: 1px;
+    background: var(--accent);
+    transition: width .3s;
+  }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a:hover::after { width: 100%; }
+
+  .nav-cta {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent) !important;
+    padding: .45rem 1.2rem;
+    border-radius: 2px;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: .75rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: background .2s, box-shadow .2s, color .2s !important;
+  }
+  .nav-cta:hover {
+    background: var(--accent) !important;
+    color: #000 !important;
+    box-shadow: var(--glow);
+  }
+  .nav-cta::after { display: none !important; }
+
+  /* hamburger */
+  .hamburger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 4px;
+  }
+  .hamburger span {
+    display: block;
+    width: 22px; height: 2px;
+    background: var(--accent);
+    transition: transform .3s, opacity .3s;
+  }
+  .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .hamburger.open span:nth-child(2) { opacity: 0; }
+  .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  /* ─── HERO ─── */
+  #hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    padding: 7rem 4rem 4rem;
+  }
+
+  /* grid bg */
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 60px 60px;
+    opacity: .4;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+  }
+
+  /* glow orbs */
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: .15;
+    pointer-events: none;
+  }
+  .orb-1 { width: 500px; height: 500px; background: var(--accent); top: -100px; right: -100px; animation: drift 8s ease-in-out infinite alternate; }
+  .orb-2 { width: 350px; height: 350px; background: var(--accent2); bottom: -50px; left: 10%; animation: drift 10s ease-in-out infinite alternate-reverse; }
+  .orb-3 { width: 200px; height: 200px; background: var(--accent3); top: 40%; left: 60%; animation: drift 6s ease-in-out infinite alternate; }
+
+  @keyframes drift {
+    from { transform: translate(0,0); }
+    to   { transform: translate(30px,40px); }
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 860px;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .6rem;
+    font-size: .72rem;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 1.8rem;
+    opacity: 0;
+    animation: fadeUp .6s ease forwards .2s;
+  }
+  .hero-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent2);
+    box-shadow: 0 0 8px var(--accent2);
+    animation: pulse 2s ease infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; }
+    50% { opacity: .3; }
+  }
+
+  .hero-title {
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: clamp(2.6rem, 6vw, 5.2rem);
+    line-height: 1.05;
+    color: var(--text-head);
+    letter-spacing: -.03em;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeUp .7s ease forwards .4s;
+  }
+  .hero-title .line { display: block; }
+  .hero-title .hl { color: var(--accent); text-shadow: var(--glow); }
+  .hero-title .hl2 { color: var(--accent2); text-shadow: var(--glow2); }
+
+  .hero-sub {
+    max-width: 540px;
+    font-size: .9rem;
+    color: var(--text-dim);
+    line-height: 1.8;
+    margin-bottom: 2.5rem;
+    opacity: 0;
+    animation: fadeUp .7s ease forwards .6s;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    opacity: 0;
+    animation: fadeUp .7s ease forwards .8s;
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    background: var(--accent);
+    color: #000;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: .8rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    padding: .85rem 2rem;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: box-shadow .3s, transform .2s;
+  }
+  .btn-primary:hover {
+    box-shadow: var(--glow);
+    transform: translateY(-2px);
+  }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    background: transparent;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: .8rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: .85rem 2rem;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: border-color .3s, color .3s, box-shadow .3s;
+  }
+  .btn-secondary:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 3rem;
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+    opacity: 0;
+    animation: fadeUp .7s ease forwards 1s;
+    flex-wrap: wrap;
+  }
+  .stat-val {
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: 2rem;
+    color: var(--text-head);
+    line-height: 1;
+  }
+  .stat-val span { color: var(--accent); }
+  .stat-label {
+    font-size: .7rem;
+    color: var(--text-dim);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    margin-top: .3rem;
+  }
+
+  /* terminal blink */
+  .cursor { display: inline-block; width: 2px; height: 1em; background: var(--accent); animation: blink .8s step-end infinite; vertical-align: text-bottom; margin-left: 2px; }
+  @keyframes blink { 0%,100%{ opacity:1 } 50%{ opacity:0 } }
+
+  /* ─── SECTION COMMONS ─── */
+  section { padding: 7rem 4rem; }
+  .section-tag {
+    font-size: .7rem;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+  .section-title {
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: clamp(2rem, 4vw, 3rem);
+    color: var(--text-head);
+    letter-spacing: -.02em;
+    line-height: 1.1;
+    margin-bottom: 1rem;
+  }
+  .section-desc {
+    max-width: 520px;
+    color: var(--text-dim);
+    font-size: .88rem;
+    line-height: 1.8;
+    margin-bottom: 3.5rem;
+  }
+
+  /* ─── CAPABILITIES ─── */
+  #capabilities { background: var(--bg2); }
+
+  .caps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+
+  .cap-card {
+    background: var(--bg2);
+    padding: 2.2rem;
+    position: relative;
+    overflow: hidden;
+    transition: background .3s;
+    cursor: default;
+  }
+  .cap-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 0;
+    background: var(--accent);
+    transition: height .4s ease;
+  }
+  .cap-card:hover { background: var(--surface); }
+  .cap-card:hover::before { height: 100%; }
+
+  .cap-icon {
+    font-size: 1.6rem;
+    margin-bottom: 1.2rem;
+    display: block;
+    filter: grayscale(0);
+  }
+  .cap-title {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--text-head);
+    margin-bottom: .6rem;
+  }
+  .cap-desc { font-size: .8rem; color: var(--text-dim); line-height: 1.7; }
+  .cap-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+    margin-top: 1.2rem;
+  }
+  .tag {
+    font-size: .65rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: .2rem .6rem;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    border-radius: 2px;
+    transition: border-color .2s, color .2s;
+  }
+  .cap-card:hover .tag {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* ─── METHOD ─── */
+  #method { position: relative; }
+
+  .timeline {
+    position: relative;
+    max-width: 780px;
+    margin: 0 auto;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 28px; top: 0; bottom: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, var(--accent), var(--accent2), transparent);
+  }
+
+  .step {
+    display: flex;
+    gap: 2.5rem;
+    margin-bottom: 3.5rem;
+    position: relative;
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: opacity .6s ease, transform .6s ease;
+  }
+  .step.visible { opacity: 1; transform: translateX(0); }
+
+  .step-num {
+    flex-shrink: 0;
+    width: 56px; height: 56px;
+    border: 1px solid var(--accent);
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: .75rem;
+    color: var(--accent);
+    position: relative;
+    z-index: 1;
+    transition: background .3s, box-shadow .3s;
+  }
+  .step:hover .step-num {
+    background: var(--accent);
+    color: #000;
+    box-shadow: var(--glow);
+  }
+
+  .step-body {}
+  .step-title {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-head);
+    margin-bottom: .5rem;
+  }
+  .step-desc { font-size: .83rem; color: var(--text-dim); line-height: 1.8; }
+  .step-ai {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    margin-top: .8rem;
+    font-size: .7rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    border: 1px solid rgba(0,255,148,.2);
+    padding: .3rem .7rem;
+    border-radius: 2px;
+  }
+  .step-ai::before { content: '⬡'; }
+
+  /* ─── PORTFOLIO ─── */
+  #portfolio { background: var(--bg2); }
+
+  .portfolio-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+
+  .project-card {
+    background: var(--bg2);
+    position: relative;
+    overflow: hidden;
+    transition: background .3s;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .project-card:hover { background: var(--surface); }
+
+  .project-thumb {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: var(--surface);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .project-thumb .thumb-bg {
+    position: absolute;
+    inset: 0;
+    opacity: .06;
+    font-size: 8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    filter: blur(2px);
+  }
+  .project-thumb .thumb-lines {
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 10px,
+      rgba(0,229,255,.04) 10px,
+      rgba(0,229,255,.04) 11px
+    );
+  }
+  .project-label {
+    position: absolute;
+    top: .8rem; left: .8rem;
+    font-size: .6rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    padding: .2rem .5rem;
+    background: rgba(0,229,255,.1);
+    border: 1px solid rgba(0,229,255,.2);
+    color: var(--accent);
+    border-radius: 2px;
+  }
+  .project-status {
+    position: absolute;
+    top: .8rem; right: .8rem;
+    font-size: .6rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    padding: .2rem .5rem;
+    border-radius: 2px;
+  }
+  .status-live { background: rgba(0,255,148,.1); border: 1px solid rgba(0,255,148,.2); color: var(--accent2); }
+  .status-wip  { background: rgba(255,62,108,.1); border: 1px solid rgba(255,62,108,.2); color: var(--accent3); }
+
+  .project-info { padding: 1.5rem; }
+  .project-name {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-head);
+    margin-bottom: .4rem;
+  }
+  .project-desc { font-size: .78rem; color: var(--text-dim); line-height: 1.6; margin-bottom: 1rem; }
+  .project-stack { display: flex; flex-wrap: wrap; gap: .4rem; }
+
+  /* ─── CONTACT ─── */
+  #contact {
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+  }
+
+  #contact .contact-inner {
+    position: relative;
+    z-index: 2;
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  .contact-glow {
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(0,229,255,.08) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    pointer-events: none;
+  }
+
+  .contact-email {
+    font-family: var(--sans);
+    font-size: clamp(1.5rem, 4vw, 2.8rem);
+    font-weight: 800;
+    color: var(--text-head);
+    display: block;
+    margin: 1.5rem 0;
+    text-decoration: none;
+    transition: color .3s;
+  }
+  .contact-email:hover { color: var(--accent); text-shadow: var(--glow); }
+
+  .socials {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin: 2.5rem 0;
+    flex-wrap: wrap;
+  }
+
+  .social-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .7rem 1.4rem;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: .78rem;
+    letter-spacing: .08em;
+    text-decoration: none;
+    border-radius: 2px;
+    transition: border-color .3s, color .3s, box-shadow .3s, transform .2s;
+  }
+  .social-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: var(--glow);
+    transform: translateY(-2px);
+  }
+  .social-btn.discord:hover { border-color: #5865F2; color: #5865F2; box-shadow: 0 0 20px rgba(88,101,242,.3); }
+  .social-btn.instagram:hover { border-color: #E1306C; color: #E1306C; box-shadow: 0 0 20px rgba(225,48,108,.3); }
+
+  .contact-note {
+    font-size: .75rem;
+    color: var(--text-dim);
+    margin-top: 2rem;
+  }
+  .contact-note span { color: var(--accent2); }
+
+  /* ─── FOOTER ─── */
+  footer {
+    padding: 2rem 4rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: .72rem;
+    color: var(--text-dim);
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  footer a { color: var(--text-dim); text-decoration: none; transition: color .2s; }
+  footer a:hover { color: var(--accent); }
+
+  /* ─── ANIMATIONS ─── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity .7s ease, transform .7s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ─── MOBILE ─── */
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.5rem; }
+    nav.scrolled { padding: .7rem 1.5rem; }
+    .nav-links {
+      position: fixed;
+      top: 0; right: -100%;
+      width: 70%; height: 100vh;
+      background: var(--bg2);
+      border-left: 1px solid var(--border);
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 2rem;
+      transition: right .4s ease;
+      padding: 2rem;
+    }
+    .nav-links.open { right: 0; }
+    .nav-links a { font-size: 1rem; }
+    .hamburger { display: flex; }
+
+    #hero { padding: 6rem 1.5rem 3rem; }
+    section { padding: 5rem 1.5rem; }
+    footer { padding: 1.5rem; flex-direction: column; text-align: center; }
+    .hero-stats { gap: 1.5rem; }
+    .timeline::before { left: 22px; }
+    .step-num { width: 44px; height: 44px; font-size: .65rem; }
+    .step { gap: 1.5rem; }
+  }
+
+  @media (max-width: 480px) {
+    .caps-grid { grid-template-columns: 1fr; }
+    .portfolio-grid { grid-template-columns: 1fr; }
+    .socials { flex-direction: column; align-items: center; }
+  }
+
+  /* ─── TYPING EFFECT ─── */
+  .typed-text { border-right: 2px solid var(--accent); white-space: nowrap; overflow: hidden; display: inline-block; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="#hero" class="nav-logo">&lt;<span>dev</span>/&gt;</a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#capabilities">Capacidades</a></li>
+    <li><a href="#method">Método</a></li>
+    <li><a href="#portfolio">Portfolio</a></li>
+    <li><a href="#contact" class="nav-cta">Hablemos</a></li>
+  </ul>
+  <button class="hamburger" id="hamburger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-grid"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <div class="hero-content">
+    <div class="hero-badge">Disponible para proyectos</div>
+    <h1 class="hero-title">
+      <span class="line">Desarrollo <span class="hl">ágil</span>,</span>
+      <span class="line">soluciones <span class="hl2">a medida</span>.</span>
+      <span class="line">Sin excusas.<span class="cursor"></span></span>
+    </h1>
+    <p class="hero-sub">
+      Construyo sistemas que escalan, scripts que automatizan lo aburrido
+      y lógicas que hacen lo imposible. Potenciado con IA de vanguardia —
+      sin perder un gramo de calidad.
+    </p>
+    <div class="hero-actions">
+      <a href="#contact" class="btn-primary">
+        <span>→</span> Iniciar proyecto
+      </a>
+      <a href="#portfolio" class="btn-secondary">
+        <span>◈</span> Ver trabajo
+      </a>
+    </div>
+    <div class="hero-stats">
+      <div>
+        <div class="stat-val">3<span>+</span></div>
+        <div class="stat-label">Años en producción</div>
+      </div>
+      <div>
+        <div class="stat-val">20<span>+</span></div>
+        <div class="stat-label">Proyectos entregados</div>
+      </div>
+      <div>
+        <div class="stat-val">∞</div>
+        <div class="stat-label">Iteraciones rápidas</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CAPABILITIES -->
+<section id="capabilities">
+  <div class="section-tag reveal">// 01 — servicios</div>
+  <h2 class="section-title reveal">Mis Capacidades</h2>
+  <p class="section-desc reveal">
+    Un stack técnico afilado para atacar problemas reales. Desde automatización
+    hasta sistemas complejos — todo con código limpio y bien documentado.
+  </p>
+
+  <div class="caps-grid reveal">
+    <div class="cap-card">
+      <span class="cap-icon">⚡</span>
+      <div class="cap-title">Desarrollo de Scripts</div>
+      <p class="cap-desc">Automatizo flujos de trabajo tediosos con scripts robustos y bien estructurados. Python, Bash, Node.js — lo que el problema necesite.</p>
+      <div class="cap-tags">
+        <span class="tag">Python</span>
+        <span class="tag">Bash</span>
+        <span class="tag">Node.js</span>
+        <span class="tag">CLI</span>
+      </div>
+    </div>
+
+    <div class="cap-card">
+      <span class="cap-icon">🤖</span>
+      <div class="cap-title">Automatización de Procesos</div>
+      <p class="cap-desc">Scraping, bots, pipelines de datos, integraciones con APIs — construyo máquinas que trabajan mientras duermes.</p>
+      <div class="cap-tags">
+        <span class="tag">Selenium</span>
+        <span class="tag">Playwright</span>
+        <span class="tag">Cron</span>
+        <span class="tag">APIs</span>
+      </div>
+    </div>
+
+    <div class="cap-card">
+      <span class="cap-icon">🐧</span>
+      <div class="cap-title">Config. Entornos Linux</div>
+      <p class="cap-desc">Servidores, entornos de desarrollo, hardening de seguridad, Docker, Nginx. Infraestructura lista para producción desde el día uno.</p>
+      <div class="cap-tags">
+        <span class="tag">Ubuntu</span>
+        <span class="tag">Docker</span>
+        <span class="tag">Nginx</span>
+        <span class="tag">SSH</span>
+      </div>
+    </div>
+
+    <div class="cap-card">
+      <span class="cap-icon">🎮</span>
+      <div class="cap-title">Lógica de Juegos & Sistemas</div>
+      <p class="cap-desc">FSMs, pathfinding, sistemas de inventario, física custom. Diseño la lógica de núcleo que hace que los juegos se sientan vivos.</p>
+      <div class="cap-tags">
+        <span class="tag">Godot</span>
+        <span class="tag">Unity</span>
+        <span class="tag">C#</span>
+        <span class="tag">GDScript</span>
+      </div>
+    </div>
+
+    <div class="cap-card">
+      <span class="cap-icon">🔗</span>
+      <div class="cap-title">Integración con IA & APIs</div>
+      <p class="cap-desc">Conecto LLMs, vision models y herramientas de IA a tus flujos de trabajo para darle superpoderes a tu producto.</p>
+      <div class="cap-tags">
+        <span class="tag">OpenAI</span>
+        <span class="tag">Anthropic</span>
+        <span class="tag">REST</span>
+        <span class="tag">Webhooks</span>
+      </div>
+    </div>
+
+    <div class="cap-card">
+      <span class="cap-icon">🧠</span>
+      <div class="cap-title">Consultoría Técnica</div>
+      <p class="cap-desc">Auditorías de arquitectura, code reviews, elección de stack. Te ayudo a tomar decisiones técnicas con evidencia, no con moda.</p>
+      <div class="cap-tags">
+        <span class="tag">Arquitectura</span>
+        <span class="tag">Review</span>
+        <span class="tag">Stack</span>
+        <span class="tag">Docs</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- METHOD -->
+<section id="method">
+  <div class="section-tag reveal">// 02 — proceso</div>
+  <h2 class="section-title reveal">Mi Método</h2>
+  <p class="section-desc reveal">
+    Trabajo en ciclos cortos e iterativos. Cada paso tiene un entregable concreto.
+    Sin sorpresas, sin bloqueos, sin código espagueti.
+  </p>
+
+  <div class="timeline">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-body">
+        <div class="step-title">Diagnóstico & Alcance</div>
+        <p class="step-desc">
+          Una llamada de 30 minutos para entender el problema real, no el síntoma. 
+          Defino el alcance, identifico riesgos técnicos y propongo la solución 
+          más directa (no la más cara).
+        </p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-body">
+        <div class="step-title">Prototipo Rápido</div>
+        <p class="step-desc">
+          En 24-48 horas tienes algo funcionando en tus manos. Un MVP crudo 
+          pero funcional para validar la dirección antes de invertir tiempo completo.
+        </p>
+        <div class="step-ai">IA Acelerada — Cursor + Claude</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-body">
+        <div class="step-title">Desarrollo Iterativo</div>
+        <p class="step-desc">
+          Ciclos cortos de 2-3 días con demos en vivo. Uso herramientas de IA 
+          para acelerar el boilerplate y enfocar mi energía en la lógica crítica 
+          que requiere criterio humano.
+        </p>
+        <div class="step-ai">IA Acelerada — Copilot + Aider</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">04</div>
+      <div class="step-body">
+        <div class="step-title">QA & Refinamiento</div>
+        <p class="step-desc">
+          Tests, edge cases, manejo de errores. Reviso el código generado por IA 
+          línea por línea — la IA escribe rápido, yo escribo bien.
+        </p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">05</div>
+      <div class="step-body">
+        <div class="step-title">Entrega & Documentación</div>
+        <p class="step-desc">
+          Código limpio, documentado y con instrucciones claras. No te dejo 
+          con una caja negra — te dejo con algo que puedes mantener y escalar.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PORTFOLIO -->
+<section id="portfolio">
+  <div class="section-tag reveal">// 03 — trabajo</div>
+  <h2 class="section-title reveal">Portfolio & Showcase</h2>
+  <p class="section-desc reveal">
+    Proyectos reales, problemas reales, soluciones directas. 
+    Cada uno es una demostración de lo que se puede construir rápido y bien.
+  </p>
+
+  <div class="portfolio-grid reveal">
+    <a href="#" class="project-card">
+      <div class="project-thumb">
+        <div class="thumb-bg">⚙️</div>
+        <div class="thumb-lines"></div>
+        <span class="project-label">Automatización</span>
+        <span class="project-status status-live">◉ Live</span>
+      </div>
+      <div class="project-info">
+        <div class="project-name">AutoBot Pipeline</div>
+        <p class="project-desc">Sistema de scraping + procesamiento de datos que corre cada 6h en un VPS Debian. Extrae, limpia y entrega reportes en Telegram.</p>
+        <div class="project-stack">
+          <span class="tag">Python</span><span class="tag">Selenium</span><span class="tag">Linux</span><span class="tag">Telegram API</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="#" class="project-card">
+      <div class="project-thumb">
+        <div class="thumb-bg">🎮</div>
+        <div class="thumb-lines"></div>
+        <span class="project-label">Game Dev</span>
+        <span class="project-status status-wip">⬡ WIP</span>
+      </div>
+      <div class="project-info">
+        <div class="project-name">RogueCore Engine</div>
+        <p class="project-desc">Motor de lógica para roguelike en Godot. FSM modular para enemigos, sistema de items con efectos apilables y generación procedural de mazmorras.</p>
+        <div class="project-stack">
+          <span class="tag">Godot 4</span><span class="tag">GDScript</span><span class="tag">Procedural</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="#" class="project-card">
+      <div class="project-thumb">
+        <div class="thumb-bg">🐧</div>
+        <div class="thumb-lines"></div>
+        <span class="project-label">DevOps</span>
+        <span class="project-status status-live">◉ Live</span>
+      </div>
+      <div class="project-info">
+        <div class="project-name">ServerKit Bootstrap</div>
+        <p class="project-desc">Script bash que configura un VPS desde cero: hardening SSH, Nginx + certbot, Docker, swap, fail2ban. Un server de producción en 8 minutos.</p>
+        <div class="project-stack">
+          <span class="tag">Bash</span><span class="tag">Ubuntu</span><span class="tag">Docker</span><span class="tag">Nginx</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="#" class="project-card">
+      <div class="project-thumb">
+        <div class="thumb-bg">🔗</div>
+        <div class="thumb-lines"></div>
+        <span class="project-label">IA Integration</span>
+        <span class="project-status status-live">◉ Live</span>
+      </div>
+      <div class="project-info">
+        <div class="project-name">GPT Workflow Agent</div>
+        <p class="project-desc">Agente conversacional con memoria a largo plazo y tools custom. Integrado en Discord para un equipo de creadores de contenido.</p>
+        <div class="project-stack">
+          <span class="tag">Python</span><span class="tag">OpenAI</span><span class="tag">Discord.py</span><span class="tag">SQLite</span>
+        </div>
+      </div>
+    </a>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="contact-glow"></div>
+  <div class="contact-inner">
+    <div class="section-tag reveal">// 04 — contacto</div>
+    <h2 class="section-title reveal">¿Tienes un proyecto?</h2>
+    <p class="section-desc reveal" style="margin: 0 auto 0; text-align: center;">
+      No me mandes un brief de 10 páginas. Mándame un mensaje directo
+      y en &lt;24h hablamos. Así de simple.
+    </p>
+
+    <a href="mailto:hola@tudominio.dev" class="contact-email reveal">
+      hola@tudominio.dev
+    </a>
+
+    <div class="socials reveal">
+      <a href="https://x.com/tuusuario" target="_blank" rel="noopener" class="social-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        @tuusuario
+      </a>
+      <a href="https://discord.gg/tuservidor" target="_blank" rel="noopener" class="social-btn discord">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+        Discord
+      </a>
+      <a href="https://instagram.com/tuusuario" target="_blank" rel="noopener" class="social-btn instagram">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+        Instagram
+      </a>
+    </div>
+
+    <a href="#contact" class="btn-primary reveal" style="margin: 0 auto; display: inline-flex;">
+      → Hablemos ahora
+    </a>
+
+    <p class="contact-note reveal">
+      Respuesta garantizada en <span>&lt;24 horas</span> · Disponible para freelance & contratos
+    </p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span>&copy; 2025 — <a href="#">tudominio.dev</a></span>
+  <span style="font-size:.65rem; color: var(--text-dim);">
+    Construido con <span style="color:var(--accent)">código</span> y 
+    <span style="color:var(--accent2)">cafeína</span>
+  </span>
+  <span><a href="#">↑ Volver arriba</a></span>
+</footer>
+
+<script>
+  /* NAV scroll */
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 50);
+  });
+
+  /* Hamburger */
+  const hamburger = document.getElementById('hamburger');
+  const navLinks  = document.getElementById('navLinks');
+  hamburger.addEventListener('click', () => {
+    hamburger.classList.toggle('open');
+    navLinks.classList.toggle('open');
+  });
+  navLinks.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      hamburger.classList.remove('open');
+      navLinks.classList.remove('open');
+    });
+  });
+
+  /* Scroll reveal — generic .reveal elements */
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        revealObserver.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
+
+  document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+  /* Timeline steps stagger */
+  const stepObserver = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => {
+          e.target.classList.add('visible');
+        }, e.target.dataset.delay || 0);
+        stepObserver.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.2 });
+
+  document.querySelectorAll('.step').forEach((step, i) => {
+    step.dataset.delay = i * 120;
+    stepObserver.observe(step);
+  });
+
+  /* Active nav link on scroll */
+  const sections = document.querySelectorAll('section[id]');
+  const navAs    = document.querySelectorAll('.nav-links a');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => {
+      if (window.scrollY >= s.offsetTop - 200) current = s.id;
+    });
+    navAs.forEach(a => {
+      a.style.color = a.getAttribute('href') === '#' + current
+        ? 'var(--accent)' : '';
+    });
+  });
+
+  /* Typewriter hero — optional subtle effect on sub */
+  // Already handled with CSS animations for performance.
+
+  /* Card tilt micro-interaction */
+  document.querySelectorAll('.cap-card, .project-card').forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const rect = card.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width  - 0.5;
+      const y = (e.clientY - rect.top)  / rect.height - 0.5;
+      card.style.transform = `perspective(800px) rotateY(${x * 4}deg) rotateX(${-y * 4}deg) translateZ(4px)`;
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = '';
+    });
+  });
+</script>
+</body>
+</html>
