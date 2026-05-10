@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEV.PERSONAL — Desarrollo Ágil & Consultoría</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Syne:wght@400..800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#080b10; --bg2:#0d1117; --surface:#111822; --border:#1e2d40;
+  --accent:#00e5ff; --accent2:#00ff94; --accent3:#ff3e6c;
+  --text:#c9d8ea; --text-dim:#556680; --text-head:#e8f4ff;
+  --mono:'JetBrains Mono',monospace; --sans:'Syne',sans-serif;
+  --glow:0 0 20px rgba(0,229,255,.25),0 0 60px rgba(0,229,255,.08);
+  --glow2:0 0 20px rgba(0,255,148,.2);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:15px;line-height:1.7;overflow-x:hidden}
+::selection{background:var(--accent);color:#000}
+::-webkit-scrollbar{width:4px} ::-webkit-scrollbar-track{background:var(--bg)} ::-webkit-scrollbar-thumb{background:var(--accent);border-radius:2px}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:.025;pointer-events:none;z-index:9999}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);pointer-events:none;z-index:9998}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:1.2rem 4rem;background:rgba(8,11,16,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);transition:padding .3s}
+nav.scrolled{padding:.8rem 4rem}
+.nav-logo{font-family:var(--mono);font-weight:800;font-size:1.1rem;color:var(--accent);text-decoration:none}
+.nav-logo span{color:var(--accent2)}
+.nav-links{display:flex;gap:2rem;list-style:none;align-items:center}
+.nav-links a{color:var(--text-dim);text-decoration:none;font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;transition:color .2s;position:relative}
+.nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:1px;background:var(--accent);transition:width .3s}
+.nav-links a:hover{color:var(--accent)} .nav-links a:hover::after{width:100%}
+.nav-cmd{display:flex;align-items:center;gap:.5rem;background:var(--surface);border:1px solid var(--border);color:var(--text-dim);font-family:var(--mono);font-size:.7rem;padding:.35rem .8rem;border-radius:4px;cursor:pointer;transition:border-color .2s,color .2s;letter-spacing:.06em}
+.nav-cmd:hover{border-color:var(--accent);color:var(--accent)}
+.nav-cmd kbd{font-size:.6rem;opacity:.6}
+.nav-cta{background:transparent;border:1px solid var(--accent);color:var(--accent)!important;padding:.45rem 1.2rem;border-radius:2px;cursor:pointer;font-family:var(--mono);font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;transition:background .2s,box-shadow .2s,color .2s!important}
+.nav-cta:hover{background:var(--accent)!important;color:#000!important;box-shadow:var(--glow)}
+.nav-cta::after{display:none!important}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px}
+.hamburger span{display:block;width:22px;height:2px;background:var(--accent);transition:transform .3s,opacity .3s}
+.hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.hamburger.open span:nth-child(2){opacity:0}
+.hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+
+/* CMD PALETTE */
+.cmd-overlay{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);display:flex;align-items:flex-start;justify-content:center;padding-top:14vh;opacity:0;pointer-events:none;transition:opacity .2s}
+.cmd-overlay.open{opacity:1;pointer-events:all}
+.cmd-box{width:100%;max-width:560px;margin:0 1rem;background:var(--bg2);border:1px solid var(--accent);border-radius:6px;overflow:hidden;box-shadow:0 0 60px rgba(0,229,255,.15),0 30px 80px rgba(0,0,0,.6);transform:translateY(-10px);transition:transform .25s}
+.cmd-overlay.open .cmd-box{transform:translateY(0)}
+.cmd-input-wrap{display:flex;align-items:center;gap:.8rem;padding:1rem 1.2rem;border-bottom:1px solid var(--border)}
+.cmd-prompt{color:var(--accent);font-size:.9rem}
+#cmdInput{flex:1;background:none;border:none;outline:none;color:var(--text-head);font-family:var(--mono);font-size:.9rem;caret-color:var(--accent)}
+.cmd-esc{font-size:.65rem;color:var(--text-dim);background:var(--surface);border:1px solid var(--border);padding:.15rem .4rem;border-radius:3px;white-space:nowrap}
+.cmd-results{max-height:340px;overflow-y:auto}
+.cmd-group-label{font-size:.65rem;color:var(--text-dim);letter-spacing:.15em;text-transform:uppercase;padding:.8rem 1.2rem .4rem}
+.cmd-item{display:flex;align-items:center;gap:.8rem;padding:.7rem 1.2rem;cursor:pointer;transition:background .15s;border-left:2px solid transparent}
+.cmd-item:hover,.cmd-item.selected{background:var(--surface);border-left-color:var(--accent)}
+.cmd-item-icon{font-size:.85rem;width:20px;text-align:center;flex-shrink:0}
+.cmd-item-text{flex:1;font-size:.82rem;color:var(--text)}
+.cmd-item-hint{font-size:.65rem;color:var(--text-dim)}
+.cmd-footer{padding:.6rem 1.2rem;border-top:1px solid var(--border);display:flex;gap:1.2rem;font-size:.65rem;color:var(--text-dim)}
+.cmd-footer kbd{color:var(--accent)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:1.5rem;opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{width:100%;max-width:720px;max-height:88vh;overflow-y:auto;background:var(--bg2);border:1px solid var(--border);border-radius:4px;transform:scale(.95) translateY(10px);transition:transform .3s}
+.modal-overlay.open .modal{transform:scale(1) translateY(0)}
+.modal-header{position:sticky;top:0;background:var(--bg2);z-index:10;display:flex;justify-content:space-between;align-items:center;padding:1.4rem 2rem;border-bottom:1px solid var(--border)}
+.modal-title{font-family:var(--sans);font-weight:800;font-size:1.3rem;color:var(--text-head)}
+.modal-close{background:none;border:1px solid var(--border);color:var(--text-dim);font-size:1rem;width:32px;height:32px;border-radius:2px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{border-color:var(--accent3);color:var(--accent3)}
+.modal-body{padding:2rem}
+.modal-section-title{font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin:1.5rem 0 .7rem}
+.modal-section-title:first-child{margin-top:0}
+.modal-text{font-size:.85rem;color:var(--text-dim);line-height:1.8}
+.modal-stack{display:flex;flex-wrap:wrap;gap:.5rem;margin:.5rem 0}
+.modal-links{display:flex;gap:.8rem;flex-wrap:wrap;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border)}
+
+/* TOAST */
+.toast{position:fixed;bottom:2rem;right:2rem;z-index:2000;background:var(--surface);border:1px solid var(--accent2);color:var(--accent2);font-family:var(--mono);font-size:.78rem;padding:.7rem 1.2rem;border-radius:3px;transform:translateY(20px);opacity:0;transition:transform .3s,opacity .3s;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* HERO */
+#hero{min-height:100vh;display:flex;align-items:center;position:relative;overflow:hidden;padding:7rem 4rem 4rem}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:60px 60px;opacity:.4;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 30%,transparent 100%)}
+.orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.15;pointer-events:none}
+.orb-1{width:500px;height:500px;background:var(--accent);top:-100px;right:-100px;animation:drift 8s ease-in-out infinite alternate}
+.orb-2{width:350px;height:350px;background:var(--accent2);bottom:-50px;left:10%;animation:drift 10s ease-in-out infinite alternate-reverse}
+.orb-3{width:200px;height:200px;background:var(--accent3);top:40%;left:60%;animation:drift 6s ease-in-out infinite alternate}
+@keyframes drift{from{transform:translate(0,0)}to{transform:translate(30px,40px)}}
+.hero-content{position:relative;z-index:2;max-width:860px}
+.hero-badge{display:inline-flex;align-items:center;gap:.6rem;font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent2);margin-bottom:1.8rem;opacity:0;animation:fadeUp .6s ease forwards .2s}
+.hero-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent2);box-shadow:0 0 8px var(--accent2);animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.hero-title{font-family:var(--sans);font-weight:800;font-size:clamp(2.6rem,6vw,5.2rem);line-height:1.05;color:var(--text-head);letter-spacing:-.03em;margin-bottom:1.5rem;opacity:0;animation:fadeUp .7s ease forwards .4s}
+.hero-title .line{display:block}
+.hero-title .hl{color:var(--accent);text-shadow:var(--glow)}
+.hero-title .hl2{color:var(--accent2);text-shadow:var(--glow2)}
+.hero-sub{max-width:540px;font-size:.9rem;color:var(--text-dim);line-height:1.8;margin-bottom:2.5rem;opacity:0;animation:fadeUp .7s ease forwards .6s}
+.hero-actions{display:flex;gap:1rem;flex-wrap:wrap;opacity:0;animation:fadeUp .7s ease forwards .8s}
+.btn-primary{display:inline-flex;align-items:center;gap:.5rem;background:var(--accent);color:#000;font-family:var(--mono);font-weight:700;font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;padding:.85rem 2rem;border:none;border-radius:2px;cursor:pointer;text-decoration:none;transition:box-shadow .3s,transform .2s}
+.btn-primary:hover{box-shadow:var(--glow);transform:translateY(-2px)}
+.btn-secondary{display:inline-flex;align-items:center;gap:.5rem;background:transparent;color:var(--text);font-family:var(--mono);font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;padding:.85rem 2rem;border:1px solid var(--border);border-radius:2px;cursor:pointer;text-decoration:none;transition:border-color .3s,color .3s}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+.hero-stats{display:flex;gap:3rem;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);opacity:0;animation:fadeUp .7s ease forwards 1s;flex-wrap:wrap}
+.stat-val{font-family:var(--sans);font-weight:800;font-size:2rem;color:var(--text-head);line-height:1}
+.stat-val span{color:var(--accent)}
+.stat-label{font-size:.7rem;color:var(--text-dim);letter-spacing:.1em;text-transform:uppercase;margin-top:.3rem}
+.cursor{display:inline-block;width:2px;height:1em;background:var(--accent);animation:blink .8s step-end infinite;vertical-align:text-bottom;margin-left:2px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* SECTION COMMONS */
+section{padding:7rem 4rem}
+.section-tag{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:1rem}
+.section-title{font-family:var(--sans);font-weight:800;font-size:clamp(2rem,4vw,3rem);color:var(--text-head);letter-spacing:-.02em;line-height:1.1;margin-bottom:1rem}
+.section-desc{max-width:520px;color:var(--text-dim);font-size:.88rem;line-height:1.8;margin-bottom:3.5rem}
+
+/* CAPS TABS */
+#capabilities{background:var(--bg2)}
+.caps-tabs{display:flex;gap:0;margin-bottom:2rem;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.caps-tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--text-dim);font-family:var(--mono);font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;padding:.7rem 1.4rem;cursor:pointer;transition:color .2s,border-color .2s;margin-bottom:-1px}
+.caps-tab:hover{color:var(--text)}
+.caps-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.caps-panel{display:none}
+.caps-panel.active{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5px;background:var(--border);border:1px solid var(--border)}
+.cap-card{background:var(--bg2);padding:2.2rem;position:relative;overflow:hidden;transition:background .3s;cursor:default}
+.cap-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:0;background:var(--accent);transition:height .4s ease}
+.cap-card:hover{background:var(--surface)} .cap-card:hover::before{height:100%}
+.cap-icon{font-size:1.6rem;margin-bottom:1.2rem;display:block}
+.cap-title{font-family:var(--sans);font-weight:700;font-size:1.05rem;color:var(--text-head);margin-bottom:.6rem}
+.cap-desc{font-size:.8rem;color:var(--text-dim);line-height:1.7}
+.cap-tags{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:1.2rem}
+.tag{font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;padding:.2rem .6rem;border:1px solid var(--border);color:var(--text-dim);border-radius:2px;transition:border-color .2s,color .2s}
+.cap-card:hover .tag{border-color:var(--accent);color:var(--accent)}
+.cap-snippet{margin-top:1rem;display:flex;align-items:center;gap:.5rem;background:var(--bg);border:1px solid var(--border);padding:.4rem .7rem;border-radius:3px;font-family:var(--mono);font-size:.72rem;color:var(--text-dim);cursor:pointer;transition:border-color .2s,color .2s;width:fit-content}
+.cap-snippet:hover,.cap-snippet.copied{border-color:var(--accent2);color:var(--accent2)}
+
+/* METHOD */
+#method{position:relative}
+.timeline{position:relative;max-width:780px;margin:0 auto}
+.timeline::before{content:'';position:absolute;left:28px;top:0;bottom:0;width:1px;background:linear-gradient(to bottom,var(--accent),var(--accent2),transparent)}
+.step{display:flex;gap:2.5rem;margin-bottom:3.5rem;position:relative;opacity:0;transform:translateX(-20px);transition:opacity .6s ease,transform .6s ease}
+.step.visible{opacity:1;transform:translateX(0)}
+.step-num{flex-shrink:0;width:56px;height:56px;border:1px solid var(--accent);background:var(--bg);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.75rem;color:var(--accent);position:relative;z-index:1;transition:background .3s,box-shadow .3s}
+.step:hover .step-num{background:var(--accent);color:#000;box-shadow:var(--glow)}
+.step-title{font-family:var(--sans);font-weight:700;font-size:1.1rem;color:var(--text-head);margin-bottom:.5rem}
+.step-desc{font-size:.83rem;color:var(--text-dim);line-height:1.8}
+.step-ai{display:inline-flex;align-items:center;gap:.4rem;margin-top:.8rem;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent2);border:1px solid rgba(0,255,148,.2);padding:.3rem .7rem;border-radius:2px}
+.step-ai::before{content:'⬡'}
+
+/* PORTFOLIO */
+#portfolio{background:var(--bg2)}
+.portfolio-filters{display:flex;gap:.5rem;margin-bottom:2rem;flex-wrap:wrap}
+.filter-btn{background:var(--surface);border:1px solid var(--border);color:var(--text-dim);font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;padding:.4rem 1rem;border-radius:2px;cursor:pointer;transition:all .2s}
+.filter-btn:hover{border-color:var(--accent);color:var(--accent)}
+.filter-btn.active{background:var(--accent);color:#000;border-color:var(--accent)}
+.portfolio-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1px;background:var(--border);border:1px solid var(--border)}
+.project-card{background:var(--bg2);position:relative;overflow:hidden;transition:background .3s;cursor:pointer;display:block}
+.project-card[data-hidden="true"]{display:none}
+.project-card:hover{background:var(--surface)}
+.project-thumb{width:100%;aspect-ratio:16/9;background:var(--surface);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.thumb-bg{position:absolute;inset:0;opacity:.06;font-size:8rem;display:flex;align-items:center;justify-content:center;filter:blur(2px)}
+.thumb-lines{position:absolute;inset:0;background-image:repeating-linear-gradient(45deg,transparent,transparent 10px,rgba(0,229,255,.04) 10px,rgba(0,229,255,.04) 11px)}
+.project-label{position:absolute;top:.8rem;left:.8rem;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;padding:.2rem .5rem;background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.2);color:var(--accent);border-radius:2px}
+.project-status{position:absolute;top:.8rem;right:.8rem;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;padding:.2rem .5rem;border-radius:2px}
+.status-live{background:rgba(0,255,148,.1);border:1px solid rgba(0,255,148,.2);color:var(--accent2)}
+.status-wip{background:rgba(255,62,108,.1);border:1px solid rgba(255,62,108,.2);color:var(--accent3)}
+.project-open{position:absolute;bottom:.7rem;right:.7rem;background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.2);color:var(--accent);font-size:.65rem;padding:.2rem .5rem;border-radius:2px;opacity:0;transition:opacity .2s;letter-spacing:.08em;font-family:var(--mono)}
+.project-card:hover .project-open{opacity:1}
+.project-info{padding:1.5rem}
+.project-name{font-family:var(--sans);font-weight:700;font-size:1rem;color:var(--text-head);margin-bottom:.4rem}
+.project-desc{font-size:.78rem;color:var(--text-dim);line-height:1.6;margin-bottom:1rem}
+.project-stack{display:flex;flex-wrap:wrap;gap:.4rem}
+.project-actions{display:flex;gap:.5rem;margin-top:1rem}
+.proj-btn{font-family:var(--mono);font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;padding:.3rem .7rem;border-radius:2px;cursor:pointer;text-decoration:none;transition:all .2s;display:inline-flex;align-items:center;gap:.3rem}
+.proj-btn-ghost{background:none;border:1px solid var(--border);color:var(--text-dim)}
+.proj-btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.proj-btn-solid{background:var(--accent);color:#000;border:1px solid var(--accent);font-weight:700}
+.proj-btn-solid:hover{box-shadow:var(--glow);transform:translateY(-1px)}
+
+/* CONTACT */
+#contact{position:relative;overflow:hidden;text-align:center}
+#contact .contact-inner{position:relative;z-index:2;max-width:640px;margin:0 auto}
+.contact-glow{position:absolute;width:600px;height:600px;background:radial-gradient(circle,rgba(0,229,255,.08) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none}
+.contact-email{font-family:var(--sans);font-size:clamp(1.5rem,4vw,2.8rem);font-weight:800;color:var(--text-head);display:block;margin:1.5rem 0;text-decoration:none;transition:color .3s}
+.contact-email:hover{color:var(--accent);text-shadow:var(--glow)}
+.socials{display:flex;justify-content:center;gap:1rem;margin:2.5rem 0;flex-wrap:wrap}
+.social-btn{display:inline-flex;align-items:center;gap:.6rem;padding:.7rem 1.4rem;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:var(--mono);font-size:.78rem;letter-spacing:.08em;text-decoration:none;border-radius:2px;transition:border-color .3s,color .3s,box-shadow .3s,transform .2s}
+.social-btn:hover{border-color:var(--accent);color:var(--accent);box-shadow:var(--glow);transform:translateY(-2px)}
+.social-btn.discord:hover{border-color:#5865F2;color:#5865F2;box-shadow:0 0 20px rgba(88,101,242,.3)}
+.social-btn.instagram:hover{border-color:#E1306C;color:#E1306C;box-shadow:0 0 20px rgba(225,48,108,.3)}
+.contact-note{font-size:.75rem;color:var(--text-dim);margin-top:2rem}
+.contact-note span{color:var(--accent2)}
+footer{padding:2rem 4rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:.72rem;color:var(--text-dim);flex-wrap:wrap;gap:1rem}
+footer a{color:var(--text-dim);text-decoration:none;transition:color .2s} footer a:hover{color:var(--accent)}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+@media(max-width:768px){
+  nav{padding:1rem 1.5rem} nav.scrolled{padding:.7rem 1.5rem}
+  .nav-links{position:fixed;top:0;right:-100%;width:70%;height:100vh;background:var(--bg2);border-left:1px solid var(--border);flex-direction:column;justify-content:center;align-items:center;gap:2rem;transition:right .4s ease;padding:2rem}
+  .nav-links.open{right:0} .nav-links a{font-size:1rem} .hamburger{display:flex} .nav-cmd{display:none}
+  #hero{padding:6rem 1.5rem 3rem} section{padding:5rem 1.5rem}
+  footer{padding:1.5rem;flex-direction:column;text-align:center}
+  .hero-stats{gap:1.5rem} .timeline::before{left:22px} .step-num{width:44px;height:44px;font-size:.65rem} .step{gap:1.5rem}
+  .modal-overlay{align-items:flex-end;padding:0} .modal{border-radius:4px 4px 0 0;max-height:90vh}
+}
+@media(max-width:480px){
+  .caps-panel.active{grid-template-columns:1fr} .portfolio-grid{grid-template-columns:1fr}
+  .socials{flex-direction:column;align-items:center}
+}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<!-- COMMAND PALETTE -->
+<div class="cmd-overlay" id="cmdOverlay">
+  <div class="cmd-box">
+    <div class="cmd-input-wrap">
+      <span class="cmd-prompt">&gt;_</span>
+      <input id="cmdInput" type="text" placeholder="Escribe un comando o busca secciones..." autocomplete="off" spellcheck="false">
+      <span class="cmd-esc">ESC para cerrar</span>
+    </div>
+    <div class="cmd-results" id="cmdResults"></div>
+    <div class="cmd-footer"><span><kbd>↑↓</kbd> navegar</span><span><kbd>↵</kbd> ejecutar</span><span><kbd>ESC</kbd> cerrar</span></div>
+  </div>
+</div>
+
+<!-- PROJECT MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle"></span>
+      <button class="modal-close" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="#hero" class="nav-logo">&lt;<span>dev</span>/&gt;</a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#capabilities">Capacidades</a></li>
+    <li><a href="#method">Método</a></li>
+    <li><a href="#portfolio">Portfolio</a></li>
+    <li><button class="nav-cmd" id="navCmdBtn">⌘ Buscar <kbd>Ctrl+K</kbd></button></li>
+    <li><a href="#contact" class="nav-cta">Hablemos</a></li>
+  </ul>
+  <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-grid"></div>
+  <div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div>
+  <div class="hero-content">
+    <div class="hero-badge">Disponible para proyectos</div>
+    <h1 class="hero-title">
+      <span class="line">Desarrollo <span class="hl">ágil</span>,</span>
+      <span class="line">soluciones <span class="hl2">a medida</span>.</span>
+      <span class="line">Sin excusas.<span class="cursor"></span></span>
+    </h1>
+    <p class="hero-sub">Construyo sistemas que escalan, scripts que automatizan lo aburrido y lógicas que hacen lo imposible. Potenciado con IA de vanguardia — sin perder un gramo de calidad.</p>
+    <div class="hero-actions">
+      <a href="#contact" class="btn-primary">→ Iniciar proyecto</a>
+      <a href="#portfolio" class="btn-secondary">◈ Ver trabajo</a>
+      <button class="btn-secondary" onclick="openCmd()">⌘ Comandos</button>
+    </div>
+    <div class="hero-stats">
+      <div><div class="stat-val">3<span>+</span></div><div class="stat-label">Años en producción</div></div>
+      <div><div class="stat-val">20<span>+</span></div><div class="stat-label">Proyectos entregados</div></div>
+      <div><div class="stat-val">∞</div><div class="stat-label">Iteraciones rápidas</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CAPABILITIES -->
+<section id="capabilities">
+  <div class="section-tag reveal">// 01 — servicios</div>
+  <h2 class="section-title reveal">Mis Capacidades</h2>
+  <p class="section-desc reveal">Stack técnico afilado para atacar problemas reales. Filtra por área o explora todo.</p>
+  <div class="caps-tabs reveal" id="capsTabs">
+    <button class="caps-tab active" data-panel="all">Todo</button>
+    <button class="caps-tab" data-panel="automation">Automatización</button>
+    <button class="caps-tab" data-panel="infra">Infraestructura</button>
+    <button class="caps-tab" data-panel="gamedev">Game Dev</button>
+    <button class="caps-tab" data-panel="ai">IA & APIs</button>
+  </div>
+  <div class="caps-panel active reveal" id="panel-all">
+    <div class="cap-card"><span class="cap-icon">⚡</span><div class="cap-title">Desarrollo de Scripts</div><p class="cap-desc">Automatizo flujos de trabajo tediosos con scripts robustos. Python, Bash, Node.js — lo que el problema necesite.</p><div class="cap-tags"><span class="tag">Python</span><span class="tag">Bash</span><span class="tag">Node.js</span><span class="tag">CLI</span></div><button class="cap-snippet" data-copy="pip install requests schedule">$ pip install requests schedule</button></div>
+    <div class="cap-card"><span class="cap-icon">🤖</span><div class="cap-title">Automatización de Procesos</div><p class="cap-desc">Scraping, bots, pipelines de datos, integraciones con APIs — construyo máquinas que trabajan mientras duermes.</p><div class="cap-tags"><span class="tag">Selenium</span><span class="tag">Playwright</span><span class="tag">Cron</span><span class="tag">APIs</span></div><button class="cap-snippet" data-copy="playwright install chromium">$ playwright install chromium</button></div>
+    <div class="cap-card"><span class="cap-icon">🐧</span><div class="cap-title">Config. Entornos Linux</div><p class="cap-desc">Servidores, hardening de seguridad, Docker, Nginx. Infraestructura lista para producción desde el día uno.</p><div class="cap-tags"><span class="tag">Ubuntu</span><span class="tag">Docker</span><span class="tag">Nginx</span><span class="tag">SSH</span></div><button class="cap-snippet" data-copy="docker compose up -d --build">$ docker compose up -d --build</button></div>
+    <div class="cap-card"><span class="cap-icon">🎮</span><div class="cap-title">Lógica de Juegos & Sistemas</div><p class="cap-desc">FSMs, pathfinding, sistemas de inventario, física custom. La lógica de núcleo que hace que los juegos se sientan vivos.</p><div class="cap-tags"><span class="tag">Godot</span><span class="tag">Unity</span><span class="tag">C#</span><span class="tag">GDScript</span></div><button class="cap-snippet" data-copy="godot --export-release Linux build/game">$ godot --export-release Linux</button></div>
+    <div class="cap-card"><span class="cap-icon">🔗</span><div class="cap-title">Integración con IA & APIs</div><p class="cap-desc">Conecto LLMs, vision models y herramientas de IA a tus flujos de trabajo para darle superpoderes a tu producto.</p><div class="cap-tags"><span class="tag">OpenAI</span><span class="tag">Anthropic</span><span class="tag">REST</span><span class="tag">Webhooks</span></div><button class="cap-snippet" data-copy="pip install anthropic openai langchain">$ pip install anthropic langchain</button></div>
+    <div class="cap-card"><span class="cap-icon">🧠</span><div class="cap-title">Consultoría Técnica</div><p class="cap-desc">Auditorías de arquitectura, code reviews, elección de stack. Decisiones técnicas con evidencia, no con moda.</p><div class="cap-tags"><span class="tag">Arquitectura</span><span class="tag">Review</span><span class="tag">Stack</span><span class="tag">Docs</span></div><button class="cap-snippet" data-copy="# hola@tudominio.dev"># Consultar → hola@tudominio.dev</button></div>
+  </div>
+  <div class="caps-panel" id="panel-automation">
+    <div class="cap-card"><span class="cap-icon">⚡</span><div class="cap-title">Desarrollo de Scripts</div><p class="cap-desc">Python, Bash, Node.js para automatizar flujos tediosos con precisión quirúrgica.</p><div class="cap-tags"><span class="tag">Python</span><span class="tag">Bash</span><span class="tag">Node.js</span></div><button class="cap-snippet" data-copy="pip install requests schedule">$ pip install requests schedule</button></div>
+    <div class="cap-card"><span class="cap-icon">🤖</span><div class="cap-title">Bots & Pipelines</div><p class="cap-desc">Scrapers, bots de Telegram/Discord, pipelines ETL, tareas programadas con cron.</p><div class="cap-tags"><span class="tag">Selenium</span><span class="tag">Playwright</span><span class="tag">Cron</span></div><button class="cap-snippet" data-copy="playwright install chromium">$ playwright install chromium</button></div>
+  </div>
+  <div class="caps-panel" id="panel-infra">
+    <div class="cap-card"><span class="cap-icon">🐧</span><div class="cap-title">Config. Linux</div><p class="cap-desc">VPS desde cero, hardening SSH, Docker, Nginx + certbot, fail2ban.</p><div class="cap-tags"><span class="tag">Ubuntu</span><span class="tag">Docker</span><span class="tag">Nginx</span></div><button class="cap-snippet" data-copy="docker compose up -d --build">$ docker compose up -d</button></div>
+    <div class="cap-card"><span class="cap-icon">🔒</span><div class="cap-title">Hardening & Seguridad</div><p class="cap-desc">Configuraciones seguras: firewall, permisos, rotación de claves, monitoreo.</p><div class="cap-tags"><span class="tag">UFW</span><span class="tag">fail2ban</span><span class="tag">SSH keys</span></div><button class="cap-snippet" data-copy="ufw allow 22/tcp && ufw enable">$ ufw allow 22 &amp;&amp; ufw enable</button></div>
+  </div>
+  <div class="caps-panel" id="panel-gamedev">
+    <div class="cap-card"><span class="cap-icon">🎮</span><div class="cap-title">Lógica & Sistemas</div><p class="cap-desc">FSMs modulares, pathfinding A*, inventarios apilables, generación procedural.</p><div class="cap-tags"><span class="tag">Godot 4</span><span class="tag">GDScript</span><span class="tag">C#</span></div><button class="cap-snippet" data-copy="godot --headless --export-debug Linux">$ godot --headless --export</button></div>
+    <div class="cap-card"><span class="cap-icon">🧩</span><div class="cap-title">Game Architecture</div><p class="cap-desc">Sistemas desacoplados: eventos, signals, service locators, data-driven design.</p><div class="cap-tags"><span class="tag">ECS</span><span class="tag">Signals</span><span class="tag">Events</span></div><button class="cap-snippet" data-copy="# diseño arquitectura juego">$ diseño-sistema --consult</button></div>
+  </div>
+  <div class="caps-panel" id="panel-ai">
+    <div class="cap-card"><span class="cap-icon">🔗</span><div class="cap-title">Integración LLMs</div><p class="cap-desc">OpenAI, Anthropic, Ollama integrados a tu producto. RAG, herramientas, agentes autónomos.</p><div class="cap-tags"><span class="tag">OpenAI</span><span class="tag">Anthropic</span><span class="tag">LangChain</span></div><button class="cap-snippet" data-copy="pip install anthropic openai langchain">$ pip install anthropic langchain</button></div>
+    <div class="cap-card"><span class="cap-icon">🧬</span><div class="cap-title">Agentes & Workflows</div><p class="cap-desc">Agentes con memoria, tools y ejecución multi-paso. Integración con Discord, Slack, Telegram.</p><div class="cap-tags"><span class="tag">Agents</span><span class="tag">RAG</span><span class="tag">Tools</span></div><button class="cap-snippet" data-copy="# ver demo agente IA">$ demo-agente --interactive</button></div>
+  </div>
+</section>
+
+<!-- METHOD -->
+<section id="method">
+  <div class="section-tag reveal">// 02 — proceso</div>
+  <h2 class="section-title reveal">Mi Método</h2>
+  <p class="section-desc reveal">Ciclos cortos, entregables concretos. Sin sorpresas, sin bloqueos.</p>
+  <div class="timeline">
+    <div class="step"><div class="step-num">01</div><div class="step-body"><div class="step-title">Diagnóstico & Alcance</div><p class="step-desc">Una llamada de 30 min para entender el problema real. Defino alcance, identifico riesgos y propongo la solución más directa.</p></div></div>
+    <div class="step"><div class="step-num">02</div><div class="step-body"><div class="step-title">Prototipo Rápido</div><p class="step-desc">En 24-48h tienes algo funcionando en tus manos. MVP crudo pero funcional para validar la dirección antes de invertir más tiempo.</p><div class="step-ai">IA Acelerada — Cursor + Claude</div></div></div>
+    <div class="step"><div class="step-num">03</div><div class="step-body"><div class="step-title">Desarrollo Iterativo</div><p class="step-desc">Ciclos de 2-3 días con demos en vivo. Uso IA para acelerar el boilerplate y enfoco mi energía en la lógica crítica.</p><div class="step-ai">IA Acelerada — Copilot + Aider</div></div></div>
+    <div class="step"><div class="step-num">04</div><div class="step-body"><div class="step-title">QA & Refinamiento</div><p class="step-desc">Tests, edge cases, manejo de errores. Reviso el código generado por IA línea por línea.</p></div></div>
+    <div class="step"><div class="step-num">05</div><div class="step-body"><div class="step-title">Entrega & Documentación</div><p class="step-desc">Código limpio, documentado, con instrucciones claras. No una caja negra — algo que puedes mantener y escalar.</p></div></div>
+  </div>
+</section>
+
+<!-- PORTFOLIO -->
+<section id="portfolio">
+  <div class="section-tag reveal">// 03 — trabajo</div>
+  <h2 class="section-title reveal">Portfolio & Showcase</h2>
+  <p class="section-desc reveal">Proyectos reales, problemas reales. Filtra o haz click en cualquier tarjeta para ver el caso completo.</p>
+  <div class="portfolio-filters reveal">
+    <button class="filter-btn active" data-filter="all">Todos</button>
+    <button class="filter-btn" data-filter="automation">Automatización</button>
+    <button class="filter-btn" data-filter="gamedev">Game Dev</button>
+    <button class="filter-btn" data-filter="devops">DevOps</button>
+    <button class="filter-btn" data-filter="ai">IA</button>
+  </div>
+  <div class="portfolio-grid reveal">
+    <div class="project-card" data-category="automation" data-project="autobot">
+      <div class="project-thumb"><div class="thumb-bg">⚙️</div><div class="thumb-lines"></div><span class="project-label">Automatización</span><span class="project-status status-live">◉ Live</span><span class="project-open">↗ Ver caso completo</span></div>
+      <div class="project-info">
+        <div class="project-name">AutoBot Pipeline</div>
+        <p class="project-desc">Sistema de scraping + procesamiento de datos que corre cada 6h en un VPS Debian. Extrae, limpia y entrega reportes en Telegram.</p>
+        <div class="project-stack"><span class="tag">Python</span><span class="tag">Selenium</span><span class="tag">Linux</span><span class="tag">Telegram API</span></div>
+        <div class="project-actions">
+          <button class="proj-btn proj-btn-ghost" onclick="openProject('autobot');event.stopPropagation()">◈ Caso completo</button>
+          <a href="https://github.com/tuusuario/autobot" target="_blank" rel="noopener" class="proj-btn proj-btn-ghost" onclick="event.stopPropagation()">↗ GitHub</a>
+        </div>
+      </div>
+    </div>
+    <div class="project-card" data-category="gamedev" data-project="roguecore">
+      <div class="project-thumb"><div class="thumb-bg">🎮</div><div class="thumb-lines"></div><span class="project-label">Game Dev</span><span class="project-status status-wip">⬡ WIP</span><span class="project-open">↗ Ver caso completo</span></div>
+      <div class="project-info">
+        <div class="project-name">RogueCore Engine</div>
+        <p class="project-desc">Motor de lógica para roguelike en Godot. FSM modular para enemigos y generación procedural de mazmorras.</p>
+        <div class="project-stack"><span class="tag">Godot 4</span><span class="tag">GDScript</span><span class="tag">Procedural</span></div>
+        <div class="project-actions">
+          <button class="proj-btn proj-btn-ghost" onclick="openProject('roguecore');event.stopPropagation()">◈ Caso completo</button>
+          <a href="https://github.com/tuusuario/roguecore" target="_blank" rel="noopener" class="proj-btn proj-btn-ghost" onclick="event.stopPropagation()">↗ GitHub</a>
+        </div>
+      </div>
+    </div>
+    <div class="project-card" data-category="devops" data-project="serverkit">
+      <div class="project-thumb"><div class="thumb-bg">🐧</div><div class="thumb-lines"></div><span class="project-label">DevOps</span><span class="project-status status-live">◉ Live</span><span class="project-open">↗ Ver caso completo</span></div>
+      <div class="project-info">
+        <div class="project-name">ServerKit Bootstrap</div>
+        <p class="project-desc">Script bash que configura un VPS desde cero: hardening, Nginx, Docker, fail2ban en 8 minutos.</p>
+        <div class="project-stack"><span class="tag">Bash</span><span class="tag">Ubuntu</span><span class="tag">Docker</span><span class="tag">Nginx</span></div>
+        <div class="project-actions">
+          <button class="proj-btn proj-btn-ghost" onclick="openProject('serverkit');event.stopPropagation()">◈ Caso completo</button>
+          <a href="https://github.com/tuusuario/serverkit" target="_blank" rel="noopener" class="proj-btn proj-btn-ghost" onclick="event.stopPropagation()">↗ GitHub</a>
+        </div>
+      </div>
+    </div>
+    <div class="project-card" data-category="ai" data-project="gptworkflow">
+      <div class="project-thumb"><div class="thumb-bg">🔗</div><div class="thumb-lines"></div><span class="project-label">IA Integration</span><span class="project-status status-live">◉ Live</span><span class="project-open">↗ Ver caso completo</span></div>
+      <div class="project-info">
+        <div class="project-name">GPT Workflow Agent</div>
+        <p class="project-desc">Agente conversacional con memoria a largo plazo integrado en Discord para equipos de contenido.</p>
+        <div class="project-stack"><span class="tag">Python</span><span class="tag">OpenAI</span><span class="tag">Discord.py</span><span class="tag">SQLite</span></div>
+        <div class="project-actions">
+          <button class="proj-btn proj-btn-ghost" onclick="openProject('gptworkflow');event.stopPropagation()">◈ Caso completo</button>
+          <a href="https://github.com/tuusuario/gpt-workflow" target="_blank" rel="noopener" class="proj-btn proj-btn-ghost" onclick="event.stopPropagation()">↗ GitHub</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="contact-glow"></div>
+  <div class="contact-inner">
+    <div class="section-tag reveal">// 04 — contacto</div>
+    <h2 class="section-title reveal">¿Tienes un proyecto?</h2>
+    <p class="section-desc reveal" style="margin:0 auto;text-align:center">No me mandes un brief de 10 páginas. Un mensaje directo y en &lt;24h hablamos.</p>
+    <a href="mailto:hola@tudominio.dev" class="contact-email reveal">hola@tudominio.dev</a>
+    <div class="socials reveal">
+      <a href="https://x.com/tuusuario" target="_blank" rel="noopener" class="social-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>@tuusuario</a>
+      <a href="https://discord.gg/tuservidor" target="_blank" rel="noopener" class="social-btn discord"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>Discord</a>
+      <a href="https://instagram.com/tuusuario" target="_blank" rel="noopener" class="social-btn instagram"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>Instagram</a>
+    </div>
+    <a href="mailto:hola@tudominio.dev" class="btn-primary reveal" style="margin:0 auto;display:inline-flex">→ Hablemos ahora</a>
+    <p class="contact-note reveal">Respuesta garantizada en <span>&lt;24 horas</span> · Disponible para freelance & contratos</p>
+  </div>
+</section>
+
+<footer>
+  <span>&copy; 2025 — <a href="#">tudominio.dev</a></span>
+  <span style="font-size:.65rem;color:var(--text-dim)">Construido con <span style="color:var(--accent)">código</span> y <span style="color:var(--accent2)">cafeína</span></span>
+  <span><a href="#" onclick="window.scrollTo({top:0,behavior:'smooth'});return false">↑ Volver arriba</a></span>
+</footer>
+
+<script>
+const PROJECTS = {
+  autobot:{title:'AutoBot Pipeline',category:'Automatización',status:'live',stack:['Python 3.11','Selenium 4','Linux/Debian','Telegram Bot API','SQLite','Cron'],problem:'Un cliente necesitaba monitorear precios y disponibilidad en 3 marketplaces distintos cada 6 horas, sin intervención manual.',solution:'Pipeline modular en Python: scraping con Selenium headless, normalización de datos, deduplicación con hash y entrega de reportes en Telegram. Dockerizado en VPS Debian con reinicio automático.',results:'~2,400 registros procesados/día · 0 downtime en 4 meses · 3h/semana de trabajo manual eliminadas',links:[{label:'↗ Ver en GitHub',href:'https://github.com/tuusuario/autobot',ext:true},{label:'→ Solicitar similar',href:'#contact',ext:false}]},
+  roguecore:{title:'RogueCore Engine',category:'Game Dev',status:'wip',stack:['Godot 4.2','GDScript','C# addons','Procedural generation','A* Pathfinding'],problem:'Necesitaba un sistema de lógica de juego modular donde agregar nuevos enemigos/items no requiera tocar el código existente.',solution:'Arquitectura data-driven con FSMs para cada tipo de entidad, sistema de items con efectos apilables basado en componentes, generación procedural usando BSP tree y cellular automata.',results:'Probado con 12 tipos de enemigos · Generación de niveles en <50ms · Fácilmente extensible',links:[{label:'↗ Ver en GitHub',href:'https://github.com/tuusuario/roguecore',ext:true},{label:'▶ Demo en itch.io',href:'https://itch.io',ext:true}]},
+  serverkit:{title:'ServerKit Bootstrap',category:'DevOps / Linux',status:'live',stack:['Bash 5','Ubuntu 22.04 LTS','Docker + Compose','Nginx','Certbot','fail2ban','UFW'],problem:'Repetir los mismos pasos de configuración para cada VPS nuevo consumía 1-2 horas y era propenso a errores.',solution:'Script bash idempotente e interactivo: detecta el sistema, instala dependencias, configura hardening SSH, firewall UFW, Docker, Nginx con SSL automático vía Certbot, swap y fail2ban.',results:'De 90+ min a ~8 min por servidor · 0 pasos manuales · Usado en 15+ deployments',links:[{label:'↗ Ver en GitHub',href:'https://github.com/tuusuario/serverkit',ext:true},{label:'⬇ Descargar',href:'https://github.com/tuusuario/serverkit/releases',ext:true}]},
+  gptworkflow:{title:'GPT Workflow Agent',category:'IA Integration',status:'live',stack:['Python 3.11','OpenAI GPT-4o','Discord.py 2','SQLite','LangChain','Pydantic'],problem:'Un equipo de creadores de contenido necesitaba un asistente que recordara contexto entre conversaciones y ejecutara tareas.',solution:'Agente con memoria persistente en SQLite (resumen por sesión + memoria episódica), sistema de herramientas custom y routing inteligente para saber cuándo usar qué tool.',results:'3 semanas en producción · +500 interacciones/semana · 40% menos preguntas repetitivas al equipo',links:[{label:'↗ Ver en GitHub',href:'https://github.com/tuusuario/gpt-workflow',ext:true},{label:'→ Solicitar similar',href:'#contact',ext:false}]}
+};
+
+const CMDS = [
+  {group:'Navegar',icon:'◈',text:'Ir a Capacidades',hint:'#capabilities',action:()=>navTo('#capabilities')},
+  {group:'Navegar',icon:'◈',text:'Ir a Mi Método',hint:'#method',action:()=>navTo('#method')},
+  {group:'Navegar',icon:'◈',text:'Ir a Portfolio',hint:'#portfolio',action:()=>navTo('#portfolio')},
+  {group:'Navegar',icon:'◈',text:'Ir a Contacto',hint:'#contact',action:()=>navTo('#contact')},
+  {group:'Proyectos',icon:'⚙',text:'Ver AutoBot Pipeline',hint:'Automatización',action:()=>{closeCmd();openProject('autobot')}},
+  {group:'Proyectos',icon:'🎮',text:'Ver RogueCore Engine',hint:'Game Dev',action:()=>{closeCmd();openProject('roguecore')}},
+  {group:'Proyectos',icon:'🐧',text:'Ver ServerKit Bootstrap',hint:'DevOps',action:()=>{closeCmd();openProject('serverkit')}},
+  {group:'Proyectos',icon:'🤖',text:'Ver GPT Workflow Agent',hint:'IA',action:()=>{closeCmd();openProject('gptworkflow')}},
+  {group:'Capacidades',icon:'⚡',text:'Filtrar: Automatización',hint:'Tab',action:()=>{closeCmd();switchTab('automation');navTo('#capabilities')}},
+  {group:'Capacidades',icon:'🐧',text:'Filtrar: Infraestructura',hint:'Tab',action:()=>{closeCmd();switchTab('infra');navTo('#capabilities')}},
+  {group:'Capacidades',icon:'🎮',text:'Filtrar: Game Dev',hint:'Tab',action:()=>{closeCmd();switchTab('gamedev');navTo('#capabilities')}},
+  {group:'Capacidades',icon:'🔗',text:'Filtrar: IA & APIs',hint:'Tab',action:()=>{closeCmd();switchTab('ai');navTo('#capabilities')}},
+  {group:'Acción',icon:'✉',text:'Enviar email',hint:'hola@tudominio.dev',action:()=>{window.location.href='mailto:hola@tudominio.dev'}},
+  {group:'Acción',icon:'↗',text:'Abrir Twitter/X',hint:'nueva pestaña',action:()=>window.open('https://x.com/tuusuario','_blank')},
+  {group:'Acción',icon:'↗',text:'Abrir Discord',hint:'nueva pestaña',action:()=>window.open('https://discord.gg/tuservidor','_blank')},
+  {group:'Acción',icon:'↗',text:'Abrir Instagram',hint:'nueva pestaña',action:()=>window.open('https://instagram.com/tuusuario','_blank')},
+];
+
+let sel=-1, filtered=[...CMDS];
+
+function navTo(hash){closeCmd();const el=document.querySelector(hash);if(el)el.scrollIntoView({behavior:'smooth'})}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
+
+// NAV
+const navbar=document.getElementById('navbar');
+window.addEventListener('scroll',()=>navbar.classList.toggle('scrolled',scrollY>50));
+const hbg=document.getElementById('hamburger'),nl=document.getElementById('navLinks');
+hbg.addEventListener('click',()=>{hbg.classList.toggle('open');nl.classList.toggle('open')});
+nl.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{hbg.classList.remove('open');nl.classList.remove('open')}));
+
+// ACTIVE NAV
+const secs=document.querySelectorAll('section[id]'),nas=document.querySelectorAll('.nav-links a[href^="#"]');
+window.addEventListener('scroll',()=>{let c='';secs.forEach(s=>{if(scrollY>=s.offsetTop-200)c=s.id});nas.forEach(a=>{a.style.color=a.getAttribute('href')==='#'+c?'var(--accent)':''})});
+
+// REVEAL
+const ro=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');ro.unobserve(e.target)}})},{threshold:.1});
+document.querySelectorAll('.reveal').forEach(el=>ro.observe(el));
+const so=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){setTimeout(()=>e.target.classList.add('visible'),+e.target.dataset.delay||0);so.unobserve(e.target)}})},{threshold:.2});
+document.querySelectorAll('.step').forEach((s,i)=>{s.dataset.delay=i*130;so.observe(s)});
+
+// TILT
+document.querySelectorAll('.cap-card,.project-card').forEach(c=>{
+  c.addEventListener('mousemove',e=>{const r=c.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;c.style.transform=`perspective(800px) rotateY(${x*4}deg) rotateX(${-y*4}deg) translateZ(4px)`});
+  c.addEventListener('mouseleave',()=>c.style.transform='');
+});
+
+// COPY SNIPPETS
+document.querySelectorAll('.cap-snippet').forEach(btn=>{
+  btn.addEventListener('click',e=>{
+    e.stopPropagation();
+    const orig=btn.textContent;
+    navigator.clipboard.writeText(btn.dataset.copy).then(()=>{
+      btn.textContent='✓ Copiado!';btn.classList.add('copied');
+      showToast('Copiado al portapapeles ✓');
+      setTimeout(()=>{btn.textContent=orig;btn.classList.remove('copied')},2000);
+    });
+  });
+});
+
+// CAPS TABS
+function switchTab(panel){
+  document.querySelectorAll('.caps-tab').forEach(t=>t.classList.toggle('active',t.dataset.panel===panel));
+  document.querySelectorAll('.caps-panel').forEach(p=>p.classList.toggle('active',p.id==='panel-'+panel));
+}
+document.getElementById('capsTabs').addEventListener('click',e=>{const t=e.target.closest('.caps-tab');if(t)switchTab(t.dataset.panel)});
+
+// PORTFOLIO FILTER
+document.querySelectorAll('.filter-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const f=btn.dataset.filter;
+    document.querySelectorAll('.project-card').forEach(c=>c.dataset.hidden=(f!=='all'&&c.dataset.category!==f)?'true':'false');
+  });
+});
+
+// PROJECT MODAL
+function openProject(id){
+  const p=PROJECTS[id];if(!p)return;
+  document.getElementById('modalTitle').textContent=p.title;
+  const sl=p.status==='live';
+  document.getElementById('modalBody').innerHTML=`
+    <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap">
+      <span style="font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;padding:.2rem .6rem;background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.2);color:var(--accent);border-radius:2px">${p.category}</span>
+      <span style="font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;padding:.2rem .5rem;border-radius:2px;${sl?'background:rgba(0,255,148,.1);border:1px solid rgba(0,255,148,.2);color:var(--accent2)':'background:rgba(255,62,108,.1);border:1px solid rgba(255,62,108,.2);color:var(--accent3)'}">${sl?'◉ Live':'⬡ WIP'}</span>
+    </div>
+    <div class="modal-section-title">El Problema</div><p class="modal-text">${p.problem}</p>
+    <div class="modal-section-title">La Solución</div><p class="modal-text">${p.solution}</p>
+    <div class="modal-section-title">Stack Técnico</div>
+    <div class="modal-stack">${p.stack.map(s=>`<span class="tag" style="color:var(--accent);border-color:rgba(0,229,255,.3)">${s}</span>`).join('')}</div>
+    <div class="modal-section-title">Resultados</div><p class="modal-text" style="color:var(--accent2)">${p.results}</p>
+    <div class="modal-links">${p.links.map(l=>l.ext?`<a href="${l.href}" target="_blank" rel="noopener" class="proj-btn proj-btn-solid">${l.label}</a>`:`<a href="${l.href}" class="proj-btn proj-btn-ghost" onclick="closeModal()">${l.label}</a>`).join('')}</div>`;
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('open');document.body.style.overflow=''}
+document.getElementById('modalClose').addEventListener('click',closeModal);
+document.getElementById('modalOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('modalOverlay'))closeModal()});
+document.querySelectorAll('.project-card').forEach(c=>c.addEventListener('click',()=>{const id=c.dataset.project;if(id)openProject(id)}));
+
+// CMD PALETTE
+function openCmd(){
+  document.getElementById('cmdOverlay').classList.add('open');
+  const inp=document.getElementById('cmdInput');inp.value='';inp.focus();
+  renderCmds(CMDS);sel=-1;
+}
+function closeCmd(){document.getElementById('cmdOverlay').classList.remove('open')}
+document.getElementById('navCmdBtn').addEventListener('click',openCmd);
+document.getElementById('cmdOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('cmdOverlay'))closeCmd()});
+
+function renderCmds(list){
+  filtered=list;
+  const groups={};list.forEach(c=>{if(!groups[c.group])groups[c.group]=[];groups[c.group].push(c)});
+  let html='';
+  for(const[g,items]of Object.entries(groups)){
+    html+=`<div class="cmd-group-label">${g}</div>`;
+    items.forEach(c=>{const i=list.indexOf(c);html+=`<div class="cmd-item" data-idx="${i}"><span class="cmd-item-icon">${c.icon}</span><span class="cmd-item-text">${c.text}</span><span class="cmd-item-hint">${c.hint}</span></div>`});
+  }
+  document.getElementById('cmdResults').innerHTML=html;
+  document.querySelectorAll('.cmd-item').forEach(item=>{
+    item.addEventListener('click',()=>filtered[+item.dataset.idx].action());
+    item.addEventListener('mouseenter',()=>{sel=+item.dataset.idx;hilite()});
+  });
+}
+function hilite(){document.querySelectorAll('.cmd-item').forEach(item=>item.classList.toggle('selected',+item.dataset.idx===sel))}
+
+document.getElementById('cmdInput').addEventListener('input',e=>{
+  const q=e.target.value.toLowerCase().trim();
+  const f=q?CMDS.filter(c=>c.text.toLowerCase().includes(q)||c.group.toLowerCase().includes(q)||c.hint.toLowerCase().includes(q)):CMDS;
+  renderCmds(f);sel=f.length>0?0:-1;hilite();
+});
+document.getElementById('cmdInput').addEventListener('keydown',e=>{
+  if(e.key==='ArrowDown'){e.preventDefault();sel=Math.min(sel+1,filtered.length-1);hilite()}
+  else if(e.key==='ArrowUp'){e.preventDefault();sel=Math.max(sel-1,0);hilite()}
+  else if(e.key==='Enter'){if(sel>=0&&filtered[sel])filtered[sel].action()}
+  else if(e.key==='Escape')closeCmd();
+});
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();openCmd()}
+  if(e.key==='Escape'){closeModal();closeCmd()}
+});
+</script>
+</body>
+</html>
